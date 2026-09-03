@@ -86,10 +86,11 @@ List of Components:
 *Connect one side of all resistors to pin 2
 *Connect the other end of each resistor to pins 3, 4, 5 and 6
 *Connect a jumper wire to GND on Arduino
-<img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 10 07 36 PM" src="https://github.com/user-attachments/assets/8eaf7c9e-4ad4-44d0-9daa-09398e2e1453" />
 <img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 9 53 47 PM" src="https://github.com/user-attachments/assets/d98095c5-810d-46d2-826a-4ae69df758d3" />
 <img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 9 53 47 PM(1)" src="https://github.com/user-attachments/assets/b6970edb-0ddc-4e94-b824-e99bb5668bc2" />
+<img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 10 07 36 PM" src="https://github.com/user-attachments/assets/8eaf7c9e-4ad4-44d0-9daa-09398e2e1453" />
 *Arrange the wires like in the above picture
+
 
 ![Final](Add photo of final product here)
 *Explain the final build*
