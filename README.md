@@ -71,8 +71,16 @@ For Hardware:
 *Add caption explaining the schematic*
 
 # Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
+<img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 9 31 58 PM" src="https://github.com/user-attachments/assets/591bef11-cdeb-4377-9de0-6abea4dab3eb" />
+<img width="868" height="1156" alt="WhatsApp Image 2026-09-03 at 9 31 58 PM(1)" src="https://github.com/user-attachments/assets/312e90dc-49f6-42fb-b013-3a1617a3f4fe" />
+List of Components:
+*Arduino Uno
+*10 Jumper wires(male-to-male)
+*4 10 mega ohm resistors
+*Breadboard
+*ring LED light
+*USB Cable
+
 
 ![Build](Add photos of build process here)
 *Explain the build steps*
