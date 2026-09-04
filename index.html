@@ -1,1 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feed a Friend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171512;
+    --yellow:#F6E24C;
+    --yellow-dark:#DFC934;
+    --yellow-hi:#FCEE85;
+    --orange:#F2921E;
+    --orange-dark:#C96B0D;
+    --orange-hi:#FAB94A;
+    --green:#2FA35C;
+    --green-dark:#1C6B3B;
+    --magenta:#C724C7;
+    --magenta-dark:#8E1C90;
+    --purple:#6B3AA0;
+    --purple-dark:#43225F;
+    --cream:#FFF7DE;
+    --danger:#E23B32;
+    --danger-dark:#A6251F;
+  }
 
+  *{ box-sizing:border-box; image-rendering:pixelated; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    background:
+      repeating-conic-gradient(from 0deg, var(--orange) 0deg 9deg, var(--orange-hi) 9deg 18deg);
+    background-color:var(--orange);
+    font-family:'VT323', monospace;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  .pixel-font{ font-family:'Press Start 2P', monospace; }
+
+  .pc-lg{
+    clip-path: polygon(
+      0 12px, 12px 12px, 12px 0,
+      calc(100% - 12px) 0, calc(100% - 12px) 12px, 100% 12px,
+      100% calc(100% - 12px), calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) 100%,
+      12px 100%, 12px calc(100% - 12px), 0 calc(100% - 12px)
+    );
+  }
+  .pc-md{
+    clip-path: polygon(
+      0 8px, 8px 8px, 8px 0,
+      calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+      8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+    );
+  }
+  .pc-sm{
+    clip-path: polygon(
+      0 4px, 4px 4px, 4px 0,
+      calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+      4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+    );
+  }
+
+  /* ---------- device shell ---------- */
+  .device{
+    position:relative;
+    width:340px;
+    max-width:100%;
+    background:var(--purple);
+    border:5px solid var(--ink);
+    padding:22px 20px 24px;
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+
+  .device.critical{ animation: shellShake 0.5s ease-in-out; }
+  .device.critical .screen{ box-shadow: 0 0 0 4px var(--danger) inset, 6px 6px 0 var(--ink); }
+  @keyframes shellShake{
+    10%,90%{ transform:translateX(-2px); }
+    20%,80%{ transform:translateX(3px); }
+    30%,50%,70%{ transform:translateX(-5px); }
+    40%,60%{ transform:translateX(5px); }
+  }
+
+  .antenna{
+    position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    width:8px; height:22px; background:var(--ink);
+  }
+  .antenna::after{
+    content:''; position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+    width:20px; height:20px; background:var(--green);
+    border:3px solid var(--ink);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 30%, 100% 70%, 80% 100%, 20% 100%, 0% 70%, 0% 30%);
+  }
+
+  .device-header{
+    display:flex; align-items:center; justify-content:space-between; padding:2px 4px 14px;
+  }
+  .device-title{ font-size:11px; letter-spacing:.02em; color:var(--cream); }
+  .device-header-right{ display:flex; align-items:center; gap:10px; }
+  .device-lights{ display:flex; gap:6px; }
+  .light{ width:8px; height:8px; background:var(--purple-dark); border:2px solid var(--ink); opacity:.7; }
+  .light.on{ background:var(--green); opacity:1; }
+  .light.warn.on{ background:var(--orange-hi); }
+  .light.danger.on{ background:var(--danger); }
+
+  .gear-btn{
+    background:var(--orange); border:2px solid var(--ink); cursor:pointer; font-size:13px;
+    color:var(--ink); padding:4px 6px; line-height:1; box-shadow:2px 2px 0 var(--ink);
+  }
+  .gear-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  /* ---------- screen ---------- */
+  .screen{
+    background:var(--yellow);
+    border:5px solid var(--ink);
+    padding:14px 12px 10px;
+    position:relative;
+    box-shadow: 6px 6px 0 var(--ink);
+    font-family:'VT323', monospace;
+    color:var(--ink);
+    transition: box-shadow .25s ease;
+  }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; }
+  .stat{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .stat-icon{ font-size:16px; line-height:1; }
+  .stat-track{
+    width:100%; height:9px; background:var(--yellow-hi);
+    border:2px solid var(--ink);
+  }
+  .stat-fill{ height:100%; transition:width .5s steps(10), background-color .5s ease; }
+  .stat.low .stat-icon{ animation:iconPulse 1s infinite steps(4); }
+  @keyframes iconPulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.25)} }
+
+  .creature-window{
+    background:var(--yellow-dark);
+    border:3px solid var(--ink);
+    padding:10px 6px 4px;
+    display:flex; flex-direction:column; align-items:center; min-height:184px;
+    justify-content:center; position:relative;
+  }
+
+  .speech-bubble{
+    font-size:19px; line-height:1.15; text-align:center; padding:4px 8px; min-height:24px; max-width:240px;
+    background:var(--cream); border:2px solid var(--ink); margin-bottom:6px;
+  }
+
+  .creature-stage{ width:140px; height:140px; position:relative; }
+  .creature-stage img{
+    width:100%; height:100%; object-fit:contain;
+    border:3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+
+  .creature-svg{ animation:bob 2.6s steps(6) infinite; transform-origin:center; transition:filter .4s ease; }
+  .creature-svg.asleep{ animation:bobSleep 3.2s steps(6) infinite; filter:brightness(.8) saturate(.7); }
+  .creature-svg.excited{ animation:bounceExcite .55s steps(8); }
+  .creature-svg.low-mood{ filter:saturate(.6) brightness(.92); }
+  @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes bobSleep{ 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-1px) rotate(-1.5deg)} }
+  @keyframes bounceExcite{ 0%{transform:scale(1)} 35%{transform:scale(1.12,.9) translateY(4px)} 70%{transform:scale(.95,1.08) translateY(-6px)} 100%{transform:scale(1)} }
+
+  .mood-badge{
+    position:absolute; top:-8px; right:-8px; font-size:20px;
+    z-index:2;
+  }
+
+  .zzz{ position:absolute; top:2px; right:14px; font-size:20px; opacity:0; font-family:'VT323',monospace; }
+  .creature-stage.show-zzz .zzz{ animation: floatZ 2.4s steps(6) infinite; }
+  @keyframes floatZ{
+    0%{ opacity:0; transform:translate(0,0) scale(.7); }
+    15%{ opacity:1; }
+    80%{ opacity:0; }
+    100%{ opacity:0; transform:translate(14px,-26px) scale(1.15); }
+  }
+
+  .name-row{
+    display:flex; justify-content:space-between; align-items:center; font-size:17px;
+    padding:6px 4px 0; border-top:2px dashed var(--ink); margin-top:8px;
+  }
+  .friend-name{ font-weight:700; letter-spacing:.02em; cursor:pointer; }
+  .friend-name-edit{
+    background:var(--cream); border:2px solid var(--ink); font-family:'VT323',monospace; font-size:17px;
+    color:var(--ink); font-weight:700; width:110px; padding:1px 3px;
+  }
+  .friend-name-edit:focus{ outline:none; }
+
+  .profile-link{ font-family:'VT323',monospace; font-size:15px; color:var(--ink); text-decoration:underline; }
+
+  /* ---------- controls ---------- */
+  .controls{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px; }
+  .care-block{ display:flex; flex-direction:column; gap:6px; }
+  .btn{
+    border:3px solid var(--ink);
+    padding:12px 6px;
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    line-height:1.5;
+    letter-spacing:0;
+    color:var(--cream);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform .06s steps(2), box-shadow .06s steps(2), filter .15s ease;
+  }
+  .btn:active{ transform:translate(4px,4px); box-shadow:none; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; filter:grayscale(.4); }
+  .btn:disabled:active{ transform:none; box-shadow:4px 4px 0 var(--ink); }
+  .btn-feed{ background:var(--orange-dark); }
+  .btn-water{ background:var(--magenta); }
+  .btn-sleep{ background:var(--green-dark); }
+  .btn-pet{ background:var(--purple-dark); }
+  .btn-icon{ font-size:15px; }
+
+  .nudge-btn{
+    border:2px solid var(--ink); background:var(--cream); color:var(--ink);
+    font-family:'Press Start 2P',monospace; font-size:8px; line-height:1.5;
+    padding:7px 4px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; text-align:center; gap:4px;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .06s steps(2), box-shadow .06s steps(2);
+  }
+  .nudge-btn:active{ transform:translate(3px,3px); box-shadow:none; }
+  .nudge-btn:hover{ background:var(--yellow-hi); }
+
+  .speaker-row{ display:flex; justify-content:center; gap:6px; margin-top:18px; }
+  .speaker-dot{ width:6px; height:6px; background:var(--purple-dark); border:1px solid var(--ink); opacity:.8; }
+
+  /* ---------- toasts ---------- */
+  .toast-stack{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    display:flex; flex-direction:column; gap:8px; z-index:50; width:min(320px, 88vw); align-items:center;
+  }
+  .toast{
+    background:var(--ink); color:var(--cream); font-family:'VT323',monospace; font-weight:700;
+    font-size:16px; padding:10px 16px; border:2px solid var(--cream); box-shadow:4px 4px 0 rgba(0,0,0,.4);
+    display:flex; align-items:center; gap:8px; animation: toastIn .2s steps(4), toastOut .2s steps(4) 3.7s forwards;
+    text-align:left;
+  }
+  .toast.urgent{ background:var(--danger); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-8px);} }
+
+  /* ---------- overlay (shared: first run + settings) ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(23,21,18,.65);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .overlay.show{ display:flex; }
+  .overlay-card{
+    background:var(--yellow); border:5px solid var(--ink); padding:26px 22px; max-width:300px;
+    width:100%; text-align:center; box-shadow:8px 8px 0 var(--ink);
+  }
+  .overlay-card h2{ margin:0 0 10px; font-size:13px; font-family:'Press Start 2P',monospace; line-height:1.6; }
+  .overlay-card p{ margin:0 0 16px; font-size:15px; color:var(--ink); line-height:1.4; font-family:'VT323',monospace; }
+  .field-label{
+    display:block; text-align:left; font-size:9px; font-family:'Press Start 2P',monospace; color:var(--ink);
+    margin:0 2px 6px;
+  }
+  .overlay-card input{
+    width:100%; padding:9px 10px; border:2px solid var(--ink); background:var(--cream);
+    font-family:'VT323',monospace; font-size:16px; margin-bottom:14px; text-align:left;
+  }
+  .overlay-card input#nameInput{ text-align:center; }
+  .overlay-card input:focus{ outline:2px solid var(--magenta); outline-offset:1px; }
+  .overlay-card button.primary{
+    width:100%; padding:12px; border:3px solid var(--ink);
+    background:var(--orange-dark); color:var(--cream);
+    font-family:'Press Start 2P',monospace; font-size:10px; cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink); margin-top:2px;
+  }
+  .overlay-card button.primary:active{ transform:translate(4px,4px); box-shadow:none; }
+  .overlay-card button.ghost{
+    width:100%; padding:9px; border:none; background:none;
+    color:var(--ink); font-family:'VT323',monospace; font-size:14px;
+    cursor:pointer; margin-top:8px; text-decoration:underline;
+  }
+  .hint{ font-size:13px; color:var(--ink); opacity:.8; margin:-6px 0 12px; text-align:left; line-height:1.3; font-family:'VT323',monospace; }
+
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+  .btn:focus-visible, .nudge-btn:focus-visible, .friend-name-edit:focus-visible,
+  .overlay-card input:focus-visible, .gear-btn:focus-visible{
+    outline:3px solid var(--ink); outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="device pc-lg" id="device">
+  <div class="antenna"></div>
+  <div class="device-header">
+    <span class="device-title pixel-font">feed a friend</span>
+    <div class="device-header-right">
+      <div class="device-lights" aria-hidden="true">
+        <span class="light" id="lightOk"></span>
+        <span class="light warn" id="lightWarn"></span>
+        <span class="light danger" id="lightDanger"></span>
+      </div>
+      <button class="gear-btn" id="settingsBtn" aria-label="Edit friend's contact info">⚙</button>
+    </div>
+  </div>
+
+  <div class="screen pc-md" id="screen">
+    <div class="stat-row" id="statRow">
+      <div class="stat" data-stat="hunger"><span class="stat-icon">🍓</span><div class="stat-track"><div class="stat-fill" id="fillHunger"></div></div></div>
+      <div class="stat" data-stat="thirst"><span class="stat-icon">💧</span><div class="stat-track"><div class="stat-fill" id="fillThirst"></div></div></div>
+      <div class="stat" data-stat="energy"><span class="stat-icon">⚡</span><div class="stat-track"><div class="stat-fill" id="fillEnergy"></div></div></div>
+      <div class="stat" data-stat="affection"><span class="stat-icon">💗</span><div class="stat-track"><div class="stat-fill" id="fillAffection"></div></div></div>
+    </div>
+
+    <div class="creature-window">
+      <div class="speech-bubble" id="speechBubble" aria-live="polite">...</div>
+      <div class="creature-stage" id="creatureStage">
+        <span class="zzz">z</span>
+        <span class="mood-badge" id="moodBadge"></span>
+        <img id="creatureImg" class="creature-svg" src="data:image/png;base64,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" alt="Your friend's mascot" draggable="false">
+      </div>
+    </div>
+
+    <div class="name-row">
+      <span class="friend-name" id="friendNameLabel" title="Tap to rename">Friend</span>
+      <a class="profile-link visually-hidden" id="profileLink" target="_blank" rel="noopener noreferrer">profile ↗</a>
+      <span id="dayCounter">day 1</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="care-block">
+      <button class="btn btn-feed" data-action="feed"><span class="btn-icon">🍓</span>Feed</button>
+      <button class="nudge-btn" data-nudge="hunger">Remind them to eat</button>
+    </div>
+    <div class="care-block">
+      <button class="btn btn-water" data-action="water"><span class="btn-icon">💧</span>Give them water</button>
+      <button class="nudge-btn" data-nudge="thirst">Remind them to drink water</button>
+    </div>
+    <div class="care-block">
+      <button class="btn btn-sleep" id="sleepBtn" data-action="sleep"><span class="btn-icon">💤</span>Put to sleep</button>
+      <button class="nudge-btn" data-nudge="energy">Remind them to rest</button>
+    </div>
+    <div class="care-block">
+      <button class="btn btn-pet" data-action="pet"><span class="btn-icon">💗</span>Cuddle</button>
+      <button class="nudge-btn" data-nudge="affection">Send them love</button>
+    </div>
+  </div>
+
+  <div class="speaker-row" aria-hidden="true">
+    <span class="speaker-dot"></span><span class="speaker-dot"></span><span class="speaker-dot"></span>
+    <span class="speaker-dot"></span><span class="speaker-dot"></span><span class="speaker-dot"></span>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card pc-md">
+    <h2>Who are you<br>looking out for?</h2>
+    <p>Feed a Friend helps you notice when someone you care about might need a check-in.</p>
+    <input id="nameInput" maxlength="16" placeholder="Their name" autocomplete="off">
+    <button class="primary" id="nameSubmit">Start caring</button>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="overlay-card pc-md">
+    <h2 style="font-size:12px;">Contact info</h2>
+    <p>Used to open a pre-filled text, email, or their profile when you tap a "remind" button — nothing is ever sent automatically, you always review it first.</p>
+    <label class="field-label" for="phoneInput">Phone number</label>
+    <input id="phoneInput" placeholder="+1 555 123 4567" autocomplete="off">
+    <label class="field-label" for="emailInput">Email</label>
+    <input id="emailInput" placeholder="friend@email.com" autocomplete="off">
+    <label class="field-label" for="socialInput">Social profile link</label>
+    <input id="socialInput" placeholder="https://instagram.com/theirname" autocomplete="off">
+    <div class="hint">Add at least one so the "remind" buttons know where to open.</div>
+    <button class="primary" id="settingsSave">Save</button>
+    <button class="ghost" id="settingsClose">Close</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'friend-state';
+  const MAX = 100;
+
+  const RATES = {
+    awake:  { hunger:-0.6, thirst:-0.8, energy:-0.5, affection:-0.3 },
+    asleep: { hunger:-0.2, thirst:-0.3, energy: 3.0, affection:-0.1 }
+  };
+
+  const THRESH_LOW = 25;
+  const THRESH_CRIT = 10;
+
+  let state = null;
+  let saveTimer = null;
+  let titleBlinkTimer = null;
+  const baseTitle = document.title;
+
+  const els = {
+    device: document.getElementById('device'),
+    speech: document.getElementById('speechBubble'),
+    stage: document.getElementById('creatureStage'),
+    svg: document.getElementById('creatureImg'),
+    moodBadge: document.getElementById('moodBadge'),
+    nameLabel: document.getElementById('friendNameLabel'),
+    profileLink: document.getElementById('profileLink'),
+    dayCounter: document.getElementById('dayCounter'),
+    sleepBtn: document.getElementById('sleepBtn'),
+    toastStack: document.getElementById('toastStack'),
+    overlay: document.getElementById('overlay'),
+    nameInput: document.getElementById('nameInput'),
+    nameSubmit: document.getElementById('nameSubmit'),
+    settingsBtn: document.getElementById('settingsBtn'),
+    settingsOverlay: document.getElementById('settingsOverlay'),
+    phoneInput: document.getElementById('phoneInput'),
+    emailInput: document.getElementById('emailInput'),
+    socialInput: document.getElementById('socialInput'),
+    settingsSave: document.getElementById('settingsSave'),
+    settingsClose: document.getElementById('settingsClose'),
+    lightOk: document.getElementById('lightOk'),
+    lightWarn: document.getElementById('lightWarn'),
+    lightDanger: document.getElementById('lightDanger'),
+    fills: {
+      hunger: document.getElementById('fillHunger'),
+      thirst: document.getElementById('fillThirst'),
+      energy: document.getElementById('fillEnergy'),
+      affection: document.getElementById('fillAffection')
+    },
+    statNodes: Array.from(document.querySelectorAll('.stat'))
+  };
+
+  const IDLE_LINES = [
+    "doing okay today.", "feeling good!", "glad you're checking in.",
+    "just going about the day.", "all good over here.", "steady as ever."
+  ];
+
+  const NUDGE_MESSAGES = {
+    hunger: "Hey! Just checking in — have you eaten anything today? 🍓",
+    thirst: "Quick nudge: have you had some water today? 💧",
+    energy: "Thinking of you — try to get some rest when you can. 💤",
+    affection: "No reason, just wanted to say I'm thinking of you today. 💗"
+  };
+
+  function defaultState(){
+    const now = Date.now();
+    return {
+      name: '', phone: '', email: '', social: '',
+      hunger: 80, thirst: 80, energy: 80, affection: 70,
+      awake: true, lastUpdate: now, bornAt: now,
+      alertedLow: {}, alertedCrit: {}
+    };
+  }
+
+  function clamp(v){ return Math.max(0, Math.min(MAX, v)); }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        return Object.assign(defaultState(), JSON.parse(res.value));
+      }
+    }catch(e){}
+    return null;
+  }
+
+  function queueSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      window.storage.set(STORAGE_KEY, JSON.stringify(state), false).catch(()=>{});
+    }, 400);
+  }
+
+  function applyDecay(){
+    const now = Date.now();
+    const minutes = (now - state.lastUpdate) / 60000;
+    if(minutes <= 0){ state.lastUpdate = now; return; }
+    const r = state.awake ? RATES.awake : RATES.asleep;
+    state.hunger = clamp(state.hunger + r.hunger * minutes);
+    state.thirst = clamp(state.thirst + r.thirst * minutes);
+    state.energy = clamp(state.energy + r.energy * minutes);
+    state.affection = clamp(state.affection + r.affection * minutes);
+    state.lastUpdate = now;
+
+    if(state.awake && state.energy <= 0){
+      state.energy = 0;
+      state.awake = false;
+      pushToast("😴 " + friendName() + " ran low on energy.", true);
+    }
+  }
+
+  function friendName(){ return state.name || 'Your friend'; }
+  function statLabel(key){ return { hunger:'hungry', thirst:'thirsty', energy:'tired', affection:'a little distant' }[key]; }
+  function statIcon(key){ return { hunger:'🍓', thirst:'💧', energy:'⚡', affection:'💗' }[key]; }
+
+  function checkAlerts(){
+    ['hunger','thirst','energy','affection'].forEach(key=>{
+      const v = state[key];
+      if(v <= THRESH_CRIT){
+        if(!state.alertedCrit[key]){
+          pushToast(`${statIcon(key)} ${friendName()} might really need a check-in — ${statLabel(key)}.`, true);
+          state.alertedCrit[key] = true; state.alertedLow[key] = true;
+        }
+      } else if(v <= THRESH_LOW){
+        if(!state.alertedLow[key]){
+          pushToast(`${statIcon(key)} Might be a good time to check on ${friendName()} — ${statLabel(key)}.`, false);
+          state.alertedLow[key] = true;
+        }
+        state.alertedCrit[key] = false;
+      } else {
+        state.alertedLow[key] = false; state.alertedCrit[key] = false;
+      }
+    });
+  }
+
+  function pushToast(msg, urgent){
+    const t = document.createElement('div');
+    t.className = 'toast' + (urgent ? ' urgent' : '');
+    t.textContent = msg;
+    els.toastStack.appendChild(t);
+    setTimeout(()=> t.remove(), 4100);
+    flashTitle(urgent);
+  }
+
+  function flashTitle(urgent){
+    document.title = (urgent ? '🔴 ' : '🔔 ') + baseTitle;
+    clearTimeout(titleBlinkTimer);
+    titleBlinkTimer = setTimeout(()=>{ document.title = baseTitle; }, 5000);
+  }
+
+  function worstStat(){
+    const keys = ['hunger','thirst','energy','affection'];
+    let worst = keys[0];
+    keys.forEach(k=>{ if(state[k] < state[worst]) worst = k; });
+    return worst;
+  }
+
+  function render(){
+    ['hunger','thirst','energy','affection'].forEach(key=>{
+      const v = state[key];
+      const fill = els.fills[key];
+      fill.style.width = v + '%';
+      let color = 'var(--green)';
+      if(v <= THRESH_CRIT) color = 'var(--danger)';
+      else if(v <= THRESH_LOW) color = 'var(--orange-dark)';
+      fill.style.background = color;
+      els.statNodes.find(n=>n.dataset.stat===key).classList.toggle('low', v <= THRESH_LOW);
+    });
+
+    els.nameLabel.textContent = friendName();
+    const days = Math.max(1, Math.floor((Date.now() - state.bornAt) / 86400000) + 1);
+    els.dayCounter.textContent = 'day ' + days;
+
+    els.sleepBtn.innerHTML = state.awake
+      ? '<span class="btn-icon">💤</span>Put to sleep'
+      : '<span class="btn-icon">☀️</span>Wake up';
+
+    const disable = !state.awake;
+    document.querySelectorAll('[data-action="feed"], [data-action="water"], [data-action="pet"]').forEach(b=>{ b.disabled = disable; });
+
+    if(state.social){
+      els.profileLink.href = state.social;
+      els.profileLink.classList.remove('visually-hidden');
+    } else {
+      els.profileLink.classList.add('visually-hidden');
+    }
+
+    renderFace();
+    renderLights();
+    els.stage.classList.toggle('show-zzz', !state.awake);
+    els.svg.classList.toggle('asleep', !state.awake);
+  }
+
+  let idleLineTimer = 0;
+  function renderFace(){
+    const w = worstStat();
+    const wv = state[w];
+    let badge, speech, lowMood;
+
+    if(!state.awake){
+      badge = '😴'; lowMood = false;
+      speech = 'zzz... ' + friendName() + ' is resting.';
+    } else if(wv <= THRESH_CRIT){
+      badge = '😟'; lowMood = true;
+      speech = `${friendName()} could use ${labelForCare(w)}.`;
+    } else if(wv <= THRESH_LOW){
+      badge = '😕'; lowMood = true;
+      speech = `Maybe check if ${friendName()} needs ${labelForCare(w)}.`;
+    } else {
+      badge = ''; lowMood = false;
+      const now = Date.now();
+      if(now - idleLineTimer > 8000){ idleLineTimer = now; }
+      speech = IDLE_LINES[Math.floor(idleLineTimer / 8000) % IDLE_LINES.length];
+    }
+
+    els.moodBadge.textContent = badge;
+    els.svg.classList.toggle('low-mood', lowMood);
+    els.speech.textContent = speech;
+  }
+
+  function labelForCare(key){
+    return { hunger:'a check-in about eating', thirst:'a reminder to hydrate', energy:'some rest', affection:'a kind word' }[key];
+  }
+
+  function renderLights(){
+    const crit = Object.values(state.alertedCrit).some(Boolean);
+    const low = Object.values(state.alertedLow).some(Boolean);
+    els.lightDanger.classList.toggle('on', crit);
+    els.lightWarn.classList.toggle('on', !crit && low);
+    els.lightOk.classList.toggle('on', !crit && !low);
+    els.device.classList.toggle('critical', crit);
+  }
+
+  function bounce(){
+    els.svg.classList.remove('excited');
+    void els.svg.offsetWidth;
+    els.svg.classList.add('excited');
+  }
+
+  function doAction(action){
+    if(action !== 'sleep' && !state.awake) return;
+    if(action === 'feed'){ state.hunger = clamp(state.hunger + 32); state.affection = clamp(state.affection + 3); bounce(); }
+    else if(action === 'water'){ state.thirst = clamp(state.thirst + 32); state.affection = clamp(state.affection + 2); bounce(); }
+    else if(action === 'pet'){ state.affection = clamp(state.affection + 22); bounce(); }
+    else if(action === 'sleep'){ state.awake = !state.awake; bounce(); }
+    checkAlerts(); render(); queueSave();
+  }
+
+  document.querySelectorAll('.btn[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=> doAction(btn.dataset.action));
+  });
+
+  // ---- send a reminder (opens the user's own SMS / email app, pre-filled, never auto-sent) ----
+  function sendNudge(key){
+    if(!state.phone && !state.email){
+      pushToast('Add their phone or email first.', false);
+      openSettings();
+      return;
+    }
+    const msg = NUDGE_MESSAGES[key];
+    let url;
+    if(state.phone){
+      url = `sms:${encodeURIComponent(state.phone)}?&body=${encodeURIComponent(msg)}`;
+    } else {
+      url = `mailto:${encodeURIComponent(state.email)}?subject=${encodeURIComponent('Checking in')}&body=${encodeURIComponent(msg)}`;
+    }
+    window.open(url, '_blank');
+    pushToast('Opened a draft for you to review and send.', false);
+  }
+
+  document.querySelectorAll('.nudge-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> sendNudge(btn.dataset.nudge));
+  });
+
+  els.nameLabel.addEventListener('click', ()=>{
+    const input = document.createElement('input');
+    input.className = 'friend-name-edit';
+    input.value = state.name;
+    input.maxLength = 16;
+    els.nameLabel.replaceWith(input);
+    input.focus(); input.select();
+    function commit(){
+      state.name = input.value.trim().slice(0,16) || state.name || 'Friend';
+      input.replaceWith(els.nameLabel);
+      render(); queueSave();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e=>{ if(e.key === 'Enter') input.blur(); });
+  });
+
+  function openSettings(){
+    els.phoneInput.value = state.phone || '';
+    els.emailInput.value = state.email || '';
+    els.socialInput.value = state.social || '';
+    els.settingsOverlay.classList.add('show');
+  }
+  els.settingsBtn.addEventListener('click', openSettings);
+  els.settingsClose.addEventListener('click', ()=> els.settingsOverlay.classList.remove('show'));
+  els.settingsSave.addEventListener('click', ()=>{
+    state.phone = els.phoneInput.value.trim();
+    state.email = els.emailInput.value.trim();
+    state.social = els.socialInput.value.trim();
+    els.settingsOverlay.classList.remove('show');
+    render(); queueSave();
+    pushToast('Contact info saved.', false);
+  });
+
+  function tick(){ applyDecay(); checkAlerts(); render(); queueSave(); }
+
+  async function init(){
+    const loaded = await loadState();
+    if(loaded && loaded.name){
+      state = loaded;
+      applyDecay();
+      render();
+    } else {
+      state = loaded || defaultState();
+      els.overlay.classList.add('show');
+    }
+
+    els.nameSubmit.addEventListener('click', submitName);
+    els.nameInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') submitName(); });
+
+    function submitName(){
+      const val = els.nameInput.value.trim().slice(0,16);
+      state.name = val || 'Friend';
+      state.lastUpdate = Date.now();
+      els.overlay.classList.remove('show');
+      render(); queueSave();
+      pushToast(`Now looking out for ${state.name} 💗`, false);
+    }
+
+    render();
+    setInterval(tick, 15000);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
