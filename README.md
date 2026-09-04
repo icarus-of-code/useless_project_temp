@@ -3,19 +3,17 @@
 
 
 # [Project Name] 🎯
-
+Feed a Friend
 
 ## Basic Details
-### Team Name: [Name]
+### Team Name: Lone Eremite
 
 
 ### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
+- Team Lead: Eshana Ann Jobin - LBS Institute of Technology for Women
 
 ### Project Description
-[2-3 lines about what your project does]
+
 
 ### The Problem (that doesn't exist)
 [What ridiculous problem are you solving?]
