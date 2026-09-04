@@ -19,12 +19,12 @@ A tamagotchi style website to feed a little bite-sized friend. You can feed them
 This website didn't exist. 
 
 ### The Solution (that nobody asked for)
-
+Now, you can remind your friend to go to sleep at 2:00 am in the morning and completely ignore the fact that you are also doing the same.
 
 ## Technical Details
 ### Technologies/Components Used
 For Software:
-- HTML, CSS, Javascript
+- HTML
 - None
 - Font library
 - Claude api
